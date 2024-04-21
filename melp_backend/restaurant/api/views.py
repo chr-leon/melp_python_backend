@@ -2,9 +2,11 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from django.http import JsonResponse
 from rest_framework import status
+from rest_framework.generics import ListAPIView  
 import csv
 from django.views.decorators.csrf import csrf_exempt
-
+from django.contrib.gis.db.models.functions import Distance
+from django.contrib.gis.geos import Point
 
 
 
@@ -63,3 +65,15 @@ class RestaurantViewSet(viewsets.ViewSet):
                 else:
                     print(serializedRestaurant.errors)
             return JsonResponse({'message': 'Archivo CSV procesado exitosamente'}, status=200)
+
+
+class RestaurantsListView(ListAPIView):
+    queryset = Restaurant.objects.all()
+    serializer_class = RestaurantSerializer
+    filterset_fields = ['latitude', 'longitude']
+    search_fields=('name','model','asset_type__name')
+    def set_queryset(self):
+        params = self.request.query_params
+        point = Point(params.longitude, params.latitude, srid=4326)  # SRID 4326 es WGS 84
+        restaurants = Restaurant.objects.filter(coordinates__distance_lte=(point, params.radius))
+        return restaurants
