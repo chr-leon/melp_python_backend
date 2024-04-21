@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework.urlpatterns import format_suffix_patterns
-from restaurant.api.views import RestaurantViewSet,RestaurantsListView;
+from restaurant.api.views import RestaurantViewSet;
 
 app_name="restaurant"
 
@@ -10,6 +10,6 @@ urlpatterns = [
     path('<str:pk>/', RestaurantViewSet.as_view({ 'put':'put' }),name='putRestaurant'),
     path('<str:pk>/', RestaurantViewSet.as_view({ 'delete':'delete' }),name='deleteRestaurant'),
     path('import', RestaurantViewSet.as_view({ 'post':'importCsv' })),
-    #path('statistics', RestaurantViewSet.as_view({ 'post':'importCsv' }))
-    path('statistics', RestaurantsListView.as_view(), name ="statistics")
+    #path('statistics', RestaurantViewSet.as_view({ 'post':'importCsv' })),
+    path('statistics', RestaurantViewSet.as_view({ 'get':'getStatistics' }, name ="statistics"))
 ]
