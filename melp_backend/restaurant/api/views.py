@@ -104,18 +104,36 @@ class RestaurantViewSet(viewsets.ViewSet):
             csv_file = request.FILES['csv_file']
             decoded_file = csv_file.read().decode('utf-8').splitlines()
             reader = csv.DictReader(decoded_file)
+            
             for row in reader:
+
                 allRestaurants=Restaurant.objects.all()
                 restaurantExists=allRestaurants.filter(id=row['id']).first()
-                serializedRestaurant=RestaurantSerializer(instance=restaurantExists,data=row)
-                if serializedRestaurant.is_valid():
-                    if(restaurantExists is None):
-                        serializedRestaurant.save(id=row['id'])                    
+                latitude = float(row.get('latitude'))
+                longitude = float(row.get('longitude'))
+                point = Point(longitude, latitude, srid=4326)  # SRID 4326 es WGS 84
+                dataToSave = {
+                'rating':row.get('rating'),
+                'name':row.get('name'),
+                'site':row.get('site'),
+                'email':row.get('email'),
+                'phone':row.get('phone'),
+                'street':row.get('street'),
+                'city':row.get('city'),
+                'state':row.get('state'),
+                'coordinates':point
+                }
+                isValidInput = CreateRestaurantSerializer(data=row)
+                if isValidInput.is_valid():
+                    serializedRestaurant=RestaurantSerializer(instance=restaurantExists,data=dataToSave)
+                    if serializedRestaurant.is_valid():
+                        if(restaurantExists is None):
+                            serializedRestaurant.save(id=row['id'])                    
+                        else:
+                            serializedRestaurant.save(instance=restaurantExists)                    
+                        
                     else:
-                        serializedRestaurant.save(instance=restaurantExists)                    
-                    
-                else:
-                    print(serializedRestaurant.errors)
+                        print(serializedRestaurant.errors)
             return JsonResponse({'message': 'Archivo CSV procesado exitosamente'}, status=200)
 
 def restaurants_within_radius(latitude, longitude, radius_in_meters):
