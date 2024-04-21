@@ -63,21 +63,3 @@ class RestaurantViewSet(viewsets.ViewSet):
                 else:
                     print(serializedRestaurant.errors)
             return JsonResponse({'message': 'Archivo CSV procesado exitosamente'}, status=200)
-
-    
-# @csrf_exempt
-# def uploadCsv(request):
-#     if request.method == 'POST' and request.FILES['csv_file']:
-#         csv_file = request.FILES['csv_file']
-#         # Aquí puedes procesar el archivo CSV según tus necesidades
-#         # Por ejemplo, puedes leerlo línea por línea y hacer algo con los datos
-#         decoded_file = csv_file.read().decode('utf-8').splitlines()
-#         reader = csv.DictReader(decoded_file)
-#         validRestaurants=[]
-#         for row in reader:
-#             serializedRestaurant=RestaurantSerializer(data=row)
-#             if serializedRestaurant.is_valid():
-#                 serializedRestaurant.save()
-#             else:
-#                 print(serializedRestaurant.errors)
-#         return JsonResponse({'message': 'Archivo CSV procesado exitosamente'}, status=200)
