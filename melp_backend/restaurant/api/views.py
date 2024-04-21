@@ -15,11 +15,33 @@ from django.shortcuts import get_object_or_404
 
 class RestaurantViewSet(viewsets.ViewSet):
     
-    def retrieve(self,request,pk):
+    def get(self,request,pk):
         queryset = Restaurant.objects.all()
         restaurant = get_object_or_404(queryset, pk=pk)
         serializer = RestaurantSerializer(restaurant)
         return Response(serializer.data,status=status.HTTP_200_OK)
+    
+    def put(self,request,pk):
+        queryset = Restaurant.objects.all()
+        restaurant = get_object_or_404(queryset, pk=pk)
+        serializer = RestaurantSerializer(restaurant,data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data,status=200)
+        return JsonResponse(serializer.errors,status=400)
+    
+    def delete(self,request,pk):
+        queryset = Restaurant.objects.all()
+        restaurant = get_object_or_404(queryset, pk=pk)
+        restaurant.delete()
+        return JsonResponse({'message':'Restaurante eliminado exitosamente'},status=200)
+    
+    def post(self,request):
+        serializer = RestaurantSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse(serializer.data,status=201)
+        return JsonResponse(serializer.errors,status=400)
     
     @csrf_exempt
     def importCsv(self,request):
