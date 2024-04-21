@@ -52,10 +52,14 @@ class RestaurantViewSet(viewsets.ViewSet):
             validRestaurants=[]
             for row in reader:
                 allRestaurants=Restaurant.objects.all()
-                restaurantExists=allRestaurants.get(id=row['id'])
+                restaurantExists=allRestaurants.filter(id=row['id']).first()
                 serializedRestaurant=RestaurantSerializer(instance=restaurantExists,data=row)
                 if serializedRestaurant.is_valid():
-                    serializedRestaurant.save()                    
+                    if(restaurantExists is None):
+                        serializedRestaurant.save(id=row['id'])                    
+                    else:
+                        serializedRestaurant.save(instance=restaurantExists)                    
+                    
                 else:
                     print(serializedRestaurant.errors)
             return JsonResponse({'message': 'Archivo CSV procesado exitosamente'}, status=200)
