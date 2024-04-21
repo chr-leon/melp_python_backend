@@ -3,14 +3,16 @@ version: '3.9'
 services:
   melp:
     image: melp_backend:0.1
+    container_name: melp_backend
     build: ./melp_backend
-    command: python manage.py runserver 0.0.0.0:8000
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
     depends_on:
       - db 
   db:
     image: postgres:15-bullseye
+    container_name: melp_db
     ports:
       - "5432:5432"
     restart: always
@@ -24,3 +26,4 @@ services:
     #      size: 134217728 # 128*2^20 bytes = 128Mb
     environment:
       POSTGRES_PASSWORD: root
+      POSTGRES_DB: melp_db
