@@ -4,7 +4,6 @@ services:
   melp:
     image: christianleon/melp_backend:1.0
     container_name: melp_backend
-    build: ./melp_backend
     command: bash -c "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
     ports:
       - "8000:8000"
@@ -12,18 +11,10 @@ services:
       - db 
   db:
     image: postgis/postgis
-    container_name: melp_db
     ports:
       - "5432:5432"
     restart: always
-    # set shared memory limit when using docker-compose
     shm_size: 128mb
-    # or set shared memory limit when deploy via swarm stack
-    #volumes:
-    #  - type: tmpfs
-    #    target: /dev/shm
-    #    tmpfs:
-    #      size: 134217728 # 128*2^20 bytes = 128Mb
     environment:
       POSTGRES_PASSWORD: root
       POSTGRES_DB: melp_db
