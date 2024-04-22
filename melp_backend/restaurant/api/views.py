@@ -26,7 +26,7 @@ class RestaurantViewSet(viewsets.ViewSet):
     def put(self,request,pk):
         queryset = Restaurant.objects.all()
         restaurant = get_object_or_404(queryset, pk=pk)
-        serializer = CreateRestaurantSerializer(restaurant,data=request.data)
+        serializer = CreateRestaurantSerializer(data=request.data)
         if serializer.is_valid():
             latitude = float(request.data.pop('latitude'))
             longitude = float(request.data.pop('longitude'))
@@ -46,7 +46,7 @@ class RestaurantViewSet(viewsets.ViewSet):
     
     def post(self,request):
 
-        
+        print(request.data)
         serializer = CreateRestaurantSerializer(data=request.data)
         if serializer.is_valid():
             latitude = float(request.data.pop('latitude'))
