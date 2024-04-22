@@ -5,6 +5,8 @@ from rest_framework import status
 import csv
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.gis.geos import Point
+from django.db.models import Count, Avg, StdDev
+
 
 
 
@@ -64,15 +66,23 @@ class RestaurantViewSet(viewsets.ViewSet):
             latitude = float(params.get('latitude'))
             longitude = float(params.get('longitude'))
             radius = float(params.get('radius'))
-            query_set = restaurants_within_radius(latitude,longitude,radius)
-            restaurants =  get_list_or_404(query_set)
-            serializedRestaurants = RestaurantSerializer(restaurants,many=True)
-            return JsonResponse(serializedRestaurants.data, safe=False,status=201)
+            restaurants_inside_circle = restaurants_within_radius(latitude,longitude,radius)
+            count = restaurants_inside_circle.count()
+            avg_rating = restaurants_inside_circle.aggregate(avg_rating=Avg('rating'))['avg_rating']
+            std_rating = restaurants_inside_circle.aggregate(std_rating=StdDev('rating'))['std_rating']
+
+            data = {
+                'count': count,
+                'avg': avg_rating,
+                'std': std_rating
+            }
+            return JsonResponse(data,status=200)
         else:
-            query_set = Restaurant.objects.all()
-            restaurants =  get_list_or_404(query_set)
-            serializedRestaurants = RestaurantSerializer(restaurants,many=True)
-            return JsonResponse(serializedRestaurants.data,safe=False,status=201)
+            return JsonResponse({
+                'count':0,
+                'avg':0,
+                'std':0
+            },status=200)
     
     @csrf_exempt
     def importCsv(self,request):
