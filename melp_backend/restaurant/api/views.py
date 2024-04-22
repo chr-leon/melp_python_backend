@@ -28,21 +28,11 @@ class RestaurantViewSet(viewsets.ViewSet):
         restaurant = get_object_or_404(queryset, pk=pk)
         serializer = CreateRestaurantSerializer(restaurant,data=request.data)
         if serializer.is_valid():
-            latitude = float(request.data.get('latitude'))
-            longitude = float(request.data.get('longitude'))
+            latitude = float(request.data.pop('latitude'))
+            longitude = float(request.data.pop('longitude'))
             point = Point(longitude, latitude, srid=4326)  # SRID 4326 es WGS 84
-            dataToSave = {
-                'rating':request.data.get('rating'),
-                'name':request.data.get('name'),
-                'site':request.data.get('site'),
-                'email':request.data.get('email'),
-                'phone':request.data.get('phone'),
-                'street':request.data.get('street'),
-                'city':request.data.get('city'),
-                'state':request.data.get('state'),
-                'coordinates':point
-            }
-            restauratSerializer = RestaurantSerializer(instance=restaurant,data=dataToSave);
+            request.data['coordinates']=point
+            restauratSerializer = RestaurantSerializer(instance=restaurant,data=request.data);
             if(restauratSerializer.is_valid()):
                 restauratSerializer.save()
                 return JsonResponse(restauratSerializer.data,status=201)
@@ -59,23 +49,11 @@ class RestaurantViewSet(viewsets.ViewSet):
         
         serializer = CreateRestaurantSerializer(data=request.data)
         if serializer.is_valid():
-            latitude = float(request.data.get('latitude'))
-            longitude = float(request.data.get('longitude'))
+            latitude = float(request.data.pop('latitude'))
+            longitude = float(request.data.pop('longitude'))
             point = Point(longitude, latitude, srid=4326)  # SRID 4326 es WGS 84
-            dataToSave = {
-                'rating':request.data.get('rating'),
-                'name':request.data.get('name'),
-                'site':request.data.get('site'),
-                'email':request.data.get('email'),
-                'phone':request.data.get('phone'),
-                'street':request.data.get('street'),
-                'city':request.data.get('city'),
-                'state':request.data.get('state'),
-                'coordinates':point
-            }
-            print('-----------------data to save-----------------')
-            print(dataToSave)
-            restauratSerializer = RestaurantSerializer(data=dataToSave);
+            request.data['coordinates']=point
+            restauratSerializer = RestaurantSerializer(data=request.data);
             if(restauratSerializer.is_valid()):
                 restauratSerializer.save()
                 return JsonResponse(restauratSerializer.data,status=201)
@@ -109,23 +87,13 @@ class RestaurantViewSet(viewsets.ViewSet):
 
                 allRestaurants=Restaurant.objects.all()
                 restaurantExists=allRestaurants.filter(id=row['id']).first()
-                latitude = float(row.get('latitude'))
-                longitude = float(row.get('longitude'))
-                point = Point(longitude, latitude, srid=4326)  # SRID 4326 es WGS 84
-                dataToSave = {
-                'rating':row.get('rating'),
-                'name':row.get('name'),
-                'site':row.get('site'),
-                'email':row.get('email'),
-                'phone':row.get('phone'),
-                'street':row.get('street'),
-                'city':row.get('city'),
-                'state':row.get('state'),
-                'coordinates':point
-                }
                 isValidInput = CreateRestaurantSerializer(data=row)
                 if isValidInput.is_valid():
-                    serializedRestaurant=RestaurantSerializer(instance=restaurantExists,data=dataToSave)
+                    latitude = float(row.pop('latitude'))
+                    longitude = float(row.pop('longitude'))
+                    point = Point(longitude, latitude, srid=4326)  # SRID 4326 es WGS 84
+                    row['coordinates']=point
+                    serializedRestaurant=RestaurantSerializer(instance=restaurantExists,data=row)
                     if serializedRestaurant.is_valid():
                         if(restaurantExists is None):
                             serializedRestaurant.save(id=row['id'])                    
