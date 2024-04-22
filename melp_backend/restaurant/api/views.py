@@ -2,11 +2,11 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from django.http import JsonResponse
 from rest_framework import status
-from rest_framework.generics import ListAPIView  
 import csv
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
+from django.db.models import Count, Avg, StdDev
+
 
 
 
@@ -26,23 +26,13 @@ class RestaurantViewSet(viewsets.ViewSet):
     def put(self,request,pk):
         queryset = Restaurant.objects.all()
         restaurant = get_object_or_404(queryset, pk=pk)
-        serializer = CreateRestaurantSerializer(restaurant,data=request.data)
+        serializer = CreateRestaurantSerializer(data=request.data)
         if serializer.is_valid():
-            latitude = float(request.data.get('latitude'))
-            longitude = float(request.data.get('longitude'))
+            latitude = float(request.data.pop('latitude'))
+            longitude = float(request.data.pop('longitude'))
             point = Point(longitude, latitude, srid=4326)  # SRID 4326 es WGS 84
-            dataToSave = {
-                'rating':request.data.get('rating'),
-                'name':request.data.get('name'),
-                'site':request.data.get('site'),
-                'email':request.data.get('email'),
-                'phone':request.data.get('phone'),
-                'street':request.data.get('street'),
-                'city':request.data.get('city'),
-                'state':request.data.get('state'),
-                'coordinates':point
-            }
-            restauratSerializer = RestaurantSerializer(instance=restaurant,data=dataToSave);
+            request.data['coordinates']=point
+            restauratSerializer = RestaurantSerializer(instance=restaurant,data=request.data);
             if(restauratSerializer.is_valid()):
                 restauratSerializer.save()
                 return JsonResponse(restauratSerializer.data,status=201)
@@ -56,26 +46,14 @@ class RestaurantViewSet(viewsets.ViewSet):
     
     def post(self,request):
 
-        
+        print(request.data)
         serializer = CreateRestaurantSerializer(data=request.data)
         if serializer.is_valid():
-            latitude = float(request.data.get('latitude'))
-            longitude = float(request.data.get('longitude'))
+            latitude = float(request.data.pop('latitude'))
+            longitude = float(request.data.pop('longitude'))
             point = Point(longitude, latitude, srid=4326)  # SRID 4326 es WGS 84
-            dataToSave = {
-                'rating':request.data.get('rating'),
-                'name':request.data.get('name'),
-                'site':request.data.get('site'),
-                'email':request.data.get('email'),
-                'phone':request.data.get('phone'),
-                'street':request.data.get('street'),
-                'city':request.data.get('city'),
-                'state':request.data.get('state'),
-                'coordinates':point
-            }
-            print('-----------------data to save-----------------')
-            print(dataToSave)
-            restauratSerializer = RestaurantSerializer(data=dataToSave);
+            request.data['coordinates']=point
+            restauratSerializer = RestaurantSerializer(data=request.data);
             if(restauratSerializer.is_valid()):
                 restauratSerializer.save()
                 return JsonResponse(restauratSerializer.data,status=201)
@@ -88,15 +66,23 @@ class RestaurantViewSet(viewsets.ViewSet):
             latitude = float(params.get('latitude'))
             longitude = float(params.get('longitude'))
             radius = float(params.get('radius'))
-            query_set = restaurants_within_radius(latitude,longitude,radius)
-            restaurants =  get_list_or_404(query_set)
-            serializedRestaurants = RestaurantSerializer(restaurants,many=True)
-            return JsonResponse(serializedRestaurants.data, safe=False,status=201)
+            restaurants_inside_circle = restaurants_within_radius(latitude,longitude,radius)
+            count = restaurants_inside_circle.count()
+            avg_rating = restaurants_inside_circle.aggregate(avg_rating=Avg('rating'))['avg_rating']
+            std_rating = restaurants_inside_circle.aggregate(std_rating=StdDev('rating'))['std_rating']
+
+            data = {
+                'count': count,
+                'avg': avg_rating,
+                'std': std_rating
+            }
+            return JsonResponse(data,status=200)
         else:
-            query_set = Restaurant.objects.all()
-            restaurants =  get_list_or_404(query_set)
-            serializedRestaurants = RestaurantSerializer(restaurants,many=True)
-            return JsonResponse(serializedRestaurants.data,safe=False,status=201)
+            return JsonResponse({
+                'count':0,
+                'avg':0,
+                'std':0
+            },status=200)
     
     @csrf_exempt
     def importCsv(self,request):
@@ -109,23 +95,13 @@ class RestaurantViewSet(viewsets.ViewSet):
 
                 allRestaurants=Restaurant.objects.all()
                 restaurantExists=allRestaurants.filter(id=row['id']).first()
-                latitude = float(row.get('latitude'))
-                longitude = float(row.get('longitude'))
-                point = Point(longitude, latitude, srid=4326)  # SRID 4326 es WGS 84
-                dataToSave = {
-                'rating':row.get('rating'),
-                'name':row.get('name'),
-                'site':row.get('site'),
-                'email':row.get('email'),
-                'phone':row.get('phone'),
-                'street':row.get('street'),
-                'city':row.get('city'),
-                'state':row.get('state'),
-                'coordinates':point
-                }
                 isValidInput = CreateRestaurantSerializer(data=row)
                 if isValidInput.is_valid():
-                    serializedRestaurant=RestaurantSerializer(instance=restaurantExists,data=dataToSave)
+                    latitude = float(row.pop('latitude'))
+                    longitude = float(row.pop('longitude'))
+                    point = Point(longitude, latitude, srid=4326)  # SRID 4326 es WGS 84
+                    row['coordinates']=point
+                    serializedRestaurant=RestaurantSerializer(instance=restaurantExists,data=row)
                     if serializedRestaurant.is_valid():
                         if(restaurantExists is None):
                             serializedRestaurant.save(id=row['id'])                    
@@ -137,10 +113,9 @@ class RestaurantViewSet(viewsets.ViewSet):
             return JsonResponse({'message': 'Archivo CSV procesado exitosamente'}, status=200)
 
 def restaurants_within_radius(latitude, longitude, radius_in_meters):
-    # Crear un objeto Point para las coordenadas de partida
+    
     point = Point(longitude, latitude, srid=4326)  # SRID 4326 es WGS 84
 
-    # Realizar la consulta para encontrar ubicaciones dentro del radio dado
     restaurants = Restaurant.objects.filter(coordinates__distance_lte=(point, radius_in_meters))
 
     return restaurants
