@@ -2,10 +2,8 @@ from rest_framework import viewsets
 from rest_framework.response import Response
 from django.http import JsonResponse
 from rest_framework import status
-from rest_framework.generics import ListAPIView  
 import csv
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.gis.db.models.functions import Distance
 from django.contrib.gis.geos import Point
 
 
@@ -105,10 +103,9 @@ class RestaurantViewSet(viewsets.ViewSet):
             return JsonResponse({'message': 'Archivo CSV procesado exitosamente'}, status=200)
 
 def restaurants_within_radius(latitude, longitude, radius_in_meters):
-    # Crear un objeto Point para las coordenadas de partida
+    
     point = Point(longitude, latitude, srid=4326)  # SRID 4326 es WGS 84
 
-    # Realizar la consulta para encontrar ubicaciones dentro del radio dado
     restaurants = Restaurant.objects.filter(coordinates__distance_lte=(point, radius_in_meters))
 
     return restaurants

@@ -1,16 +1,10 @@
 from rest_framework import serializers
 from restaurant.models import Restaurant
-from django.contrib.gis.db import models
-import uuid
 
 class RestaurantSerializer(serializers.ModelSerializer):
     class Meta:
         model = Restaurant
         fields = ["id", "rating", "name", "site", "email", "phone", "street", "city", "state", "coordinates"]
-
-        # extra_kwargs = {
-        #     'role_name':{'required':True}
-        # }
 
 
 
