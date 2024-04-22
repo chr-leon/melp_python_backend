@@ -37,7 +37,7 @@ Los endpoints son:
 * Contar con una cuenta en Docker hub e iniciar session atravez de consola con el comando "docker login"
 
 ## Instrucciones para Levanta la API para pruebas 
-* Una vez cumplido los requisitos simplemente se debe ejecutar el comando "docker-compose up melp -f docker-compose.test.yml" y este se encargará de recuperar las images y levantar la API en conjunto a la base de datos.
+* Una vez cumplido los requisitos simplemente se debe ejecutar el comando <b>docker-compose -f ./docker-compose.test.yml up melp</b> y este se encargará de recuperar las images y levantar la API en conjunto a la base de datos.
 
 ## Instrucciones para Levanta la API para desarrollo 
-* Una vez cumplido los requisitos simplemente se debe ejecutar el comando "docker-compose up melp --build -f docker-compose.yml" y este se encargará de construir la imagen para levantar el container basado en los cambios que se hayan realizado en codigo.
+* Una vez cumplido los requisitos simplemente se debe ejecutar el comando <b>docker-compose -f docker-compose.yml  up --build</b> y este se encargará de construir la imagen para levantar el container basado en los cambios que se hayan realizado en codigo.
