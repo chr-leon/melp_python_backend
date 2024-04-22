@@ -1,4 +1,5 @@
-from django.db import models
+#from django.db import models
+from django.contrib.gis.db import models
 import uuid
 
 class Restaurant(models.Model):
@@ -11,7 +12,6 @@ class Restaurant(models.Model):
     street = models.CharField(max_length=200)
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
-    latitude = models.FloatField()
-    longitude = models.FloatField()
+    coordinates = models.PointField()
     class Meta:
         db_table="restaurant"
