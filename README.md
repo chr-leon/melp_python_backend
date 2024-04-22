@@ -40,3 +40,5 @@ Los endpoints son:
 
 ## Instrucciones para levantar la API para desarrollo 
 * Una vez cumplidos los requisitos simplemente se debe ejecutar el comando <b>docker-compose -f docker-compose.yml  up --build</b> y este se encargará de construir la imagen para levantar el contenedor basado en los cambios que se hayan realizado en el código.
+## Posibles errores
+  * En ocasiones, la creación del contenedor de la API se adelanta y trata de ejecutar comandos cuando el contenedor de la base de datos aún no está listo. Tras el error, basta con volver a ejecutar el comando para levantar la aplicación, ya sea en modo de prueba o desarrollo y funcionará con normalidad.
